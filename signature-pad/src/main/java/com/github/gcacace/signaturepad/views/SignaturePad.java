@@ -6,8 +6,11 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -17,6 +20,8 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
+
+import androidx.annotation.ColorInt;
 
 import com.github.gcacace.signaturepad.R;
 import com.github.gcacace.signaturepad.utils.Bezier;
@@ -66,7 +71,7 @@ public class SignaturePad extends View {
     private final float DEFAULT_ATTR_VELOCITY_FILTER_WEIGHT = 0.9f;
     private final boolean DEFAULT_ATTR_CLEAR_ON_DOUBLE_CLICK = false;
 
-    private Paint mPaint = new Paint();
+    public Paint mPaint = new Paint();
     private Bitmap mSignatureBitmap = null;
     private Canvas mSignatureBitmapCanvas = null;
 
@@ -257,6 +262,12 @@ public class SignaturePad extends View {
 
     public void setSignatureBitmap(final Bitmap signature) {
         // View was laid out...
+        if (signature != null && mSignatureBitmap != null) {
+            if (signature.sameAs(mSignatureBitmap)) {
+                Log.d("SignaturePad", "BITMAPS ARE THE SAME!");
+                return;
+            }
+        }
         if (ViewCompat.isLaidOut(this)) {
             clearView();
             ensureSignatureBitmap();
@@ -299,6 +310,20 @@ public class SignaturePad extends View {
     public Bitmap getTransparentSignatureBitmap() {
         ensureSignatureBitmap();
         return mSignatureBitmap;
+    }
+
+    public Bitmap getTransparentBitmap(@ColorInt int tint) {
+        ensureSignatureBitmap();
+        final ColorFilter previousColorFilter = mPaint.getColorFilter();
+        mPaint.setColorFilter(new PorterDuffColorFilter(getContext().getResources().getColor(android.R.color.black), PorterDuff.Mode.SRC_IN));
+        final int previousColor = mPaint.getColor();
+        mPaint.setColor(tint);
+        final Bitmap tinted = Bitmap.createBitmap(mSignatureBitmap.getWidth(), mSignatureBitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(tinted);
+        canvas.drawBitmap(mSignatureBitmap, 0f, 0f, mPaint);
+        mPaint.setColorFilter(previousColorFilter);
+        mPaint.setColor(previousColor);
+        return tinted;
     }
 
     public Bitmap getTransparentSignatureBitmap(boolean trimBlankSpace) {
