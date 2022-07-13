@@ -41,7 +41,6 @@ public class SignaturePad extends View {
     private float mLastVelocity;
     private float mLastWidth;
     private RectF mDirtyRect;
-    private Bitmap mBitmapSavedState;
 
     private final SvgBuilder mSvgBuilder = new SvgBuilder();
 
@@ -107,34 +106,6 @@ public class SignaturePad extends View {
                 return onDoubleClick();
             }
         });
-    }
-
-    @Override
-    protected Parcelable onSaveInstanceState() {
-        try {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("superState", super.onSaveInstanceState());
-            if (this.mHasEditState == null || this.mHasEditState) {
-                this.mBitmapSavedState = this.getTransparentSignatureBitmap();
-            }
-            bundle.putParcelable("signatureBitmap", this.mBitmapSavedState);
-            return bundle;
-        } catch(Exception e) {
-            Log.w(TAG, String.format("error saving instance state: %s", e.getMessage()));
-            return super.onSaveInstanceState();
-        }
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Parcelable state) {
-        if (state instanceof Bundle) {
-            Bundle bundle = (Bundle) state;
-            this.setSignatureBitmap((Bitmap) bundle.getParcelable("signatureBitmap"));
-            this.mBitmapSavedState = bundle.getParcelable("signatureBitmap");
-            state = bundle.getParcelable("superState");
-        }
-        this.mHasEditState = false;
-        super.onRestoreInstanceState(state);
     }
 
     /**
